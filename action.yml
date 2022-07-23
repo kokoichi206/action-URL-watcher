@@ -1,0 +1,104 @@
+name: "URL Wathcer"
+description: "URL Wathcer with Composite actions"
+inputs:
+  url:
+    description: "URL to watch"
+    required: true
+  excluded-patterns:
+    description: |
+      Excluded patterns to check.
+      * Extended regular expression of sed.
+      * Each patterns are separated by ';'
+      * Example: '"style.min.css\?[0-9]*-[0-9]*";"common.js\?[0-9]*-[0-9]*"'
+    required: false
+    default: ""
+  save-dir:
+    description: "Directory to save the latest file."
+    required: false
+    default: ./output
+  save-file:
+    description: "The name of the latest file."
+    required: false
+    default: latest.txt
+outputs:
+  diff:
+    description: |
+      Whether the URL(HTML contents) is updated or not.
+      * true: updated
+      * false: NOT updated
+    value: ${{ steps.diff-check.outputs.diff }}
+runs:
+  using: "composite"
+  steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        if [ -z ${{ inputs.url }} ]; then
+          echo "inputs.url should not be empty"
+          exit 1
+        fi
+        if [ -z ${{ inputs.save-dir }} ]; then
+          echo "inputs.save-dir should not be empty"
+          exit 1
+        fi
+        if [ -z ${{ inputs.save-file }} ]; then
+          echo "inputs.save-file should not be empty"
+          exit 1
+        fi
+    - name: Setup
+      shell: bash
+      run: |
+        mkdir -p ${{ inputs.save-dir }}
+        # When first executed, the output file does not exist..
+        if [[ ! -f "${{ inputs.save-dir }}/${{ inputs.save-file }}" ]]; then
+          echo "Target file does not exist, so create a empty file."
+          touch "${{ inputs.save-dir }}/${{ inputs.save-file }}"
+        fi
+    - name: Diff check
+      id: diff-check
+      working-directory: ${{ inputs.save-dir }}
+      shell: bash
+      run: |
+        curl ${{ inputs.url }} > "${{ inputs.save-file }}_now"
+
+        # save the current field separator to restore lator
+        old_IFS=$IFS
+        # new field separator
+        IFS=";"
+        excluded_patterns="${{ inputs.excluded-patterns }}"
+        read -ra excluded_patterns_array <<< "$excluded_patterns"
+        IFS=$old_IFS
+
+        for pattern in "${excluded_patterns_array[@]}"; do
+          echo "$pattern"
+          # Delete the specified pattern
+          sed -i -E "s@$pattern@@g" "${{ inputs.save-file }}_now"
+          sed -i -E "s@$pattern@@g" "${{ inputs.save-file }}"
+        done
+
+        # diff check
+        set +e
+        diff "${{ inputs.save-file }}_now" "${{ inputs.save-file }}"
+        STATUS_CODE=$?
+        set -e
+
+        result=false
+        if [ "${STATUS_CODE}" -gt 0 ]; then
+          result=true
+        fi
+        echo "::set-output name=diff::${result}"
+    - name: Commit the change and push it when diff found
+      if: ${{ steps.diff-check.outputs.diff }}
+      shell: bash
+      working-directory: ${{ inputs.save-dir }}
+      run: |
+        mv "${{ inputs.save-file }}_now" "${{ inputs.save-file }}"
+
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add "${{ inputs.save-file }}"
+        git commit -m "Updated latest file."
+        git push
+branding:
+  icon: "globe"
+  color: "orange"
