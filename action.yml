@@ -88,7 +88,7 @@ runs:
         fi
         echo "::set-output name=diff::${result}"
     - name: Commit the change and push it when diff found
-      if: ${{ steps.diff-check.outputs.diff }}
+      if: ${{ steps.diff-check.outputs.diff == 'true' }}
       shell: bash
       working-directory: ${{ inputs.save-dir }}
       run: |

@@ -26,7 +26,7 @@ See [action.yml](action.yml).
 
 ```yaml
 - name: URL Wathcer
-  uses: kokoichi206/action-URL-watcher@v0.1.0-alpha
+  uses: kokoichi206/action-URL-watcher@v0.1.1-alpha
   with:
     url: https://odhackathon.metro.tokyo.lg.jp/
 
@@ -58,14 +58,14 @@ jobs:
 
       - name: Check action
         id: my-action
-        uses: kokoichi206/action-URL-watcher@main
+        uses: kokoichi206/action-URL-watcher@v0.1.1-alpha
         with:
           url: https://target.url.com
           excluded-patterns: 'style.min.css\?[0-9]*-[0-9]*;common.js\?[0-9]*-[0-9]*'
           save-dir: ./url_watcher
 
       - name: Action when diff found
-        if: ${{ steps.my-action.outputs.diff }}
+        if: ${{ steps.my-action.outputs.diff == true }}
         run: |
           # Do something
           echo "Diff found!"
