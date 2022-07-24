@@ -1,4 +1,6 @@
-# action-URL-watcher
+![](https://img.shields.io/github/v/release/kokoichi206/action-URL-watcher?include_prereleases)
+
+# [action-URL-watcher](https://github.com/marketplace/actions/url-wathcer)
 
 Detect whether HTML contents is updated or not and commit diff to the repository.
 Use repository to save the latest HTML file.
@@ -23,7 +25,8 @@ See [action.yml](action.yml).
 ## Usage
 
 ```yaml
-- uses: kokoichi206/action-URL-watcher@main
+- name: URL Wathcer
+  uses: kokoichi206/action-URL-watcher@v0.1.0-alpha
   with:
     url: https://odhackathon.metro.tokyo.lg.jp/
 
@@ -33,10 +36,10 @@ See [action.yml](action.yml).
     #
     # Example(below):
     #  * This patterns match two regular expression.
-    #    * "style.min.css\?[0-9]*-[0-9]*"
-    #    * "common.js\?[0-9]*-[0-9]*"
+    #    * style.min.css\?[0-9]*-[0-9]*
+    #    * common.js\?[0-9]*-[0-9]*
     #  * `path/style.min.css?2022-0724` is treated as `path/`.
-    excluded-patterns: '"style.min.css\?[0-9]*-[0-9]*";"common.js\?[0-9]*-[0-9]*"'
+    excluded-patterns: 'style.min.css\?[0-9]*-[0-9]*;common.js\?[0-9]*-[0-9]*'
 
     save-dir: ./url_watcher_result
 ```
@@ -58,7 +61,7 @@ jobs:
         uses: kokoichi206/action-URL-watcher@main
         with:
           url: https://target.url.com
-          excluded-patterns: '"style.min.css\?[0-9]*-[0-9]*";"common.js\?[0-9]*-[0-9]*"'
+          excluded-patterns: 'style.min.css\?[0-9]*-[0-9]*;common.js\?[0-9]*-[0-9]*'
           save-dir: ./url_watcher
 
       - name: Action when diff found
